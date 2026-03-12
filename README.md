@@ -6,7 +6,7 @@
 This project demonstrates how to automate the **starting and stopping of EC2 instances** using **AWS Lambda** and **Boto3** (Amazon’s Python SDK). The automation is based on instance tags, making it flexible and reusable for different environments.
 
 ---
-
+ 
 ## 🛠️ Prerequisites
 - AWS account with access to **EC2**, **IAM**, and **Lambda**.
 - Basic knowledge of Python and AWS services.
