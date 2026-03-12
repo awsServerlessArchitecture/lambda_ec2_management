@@ -21,6 +21,7 @@ This project demonstrates how to automate the **starting and stopping of EC2 ins
 - Tag them as follows:
   - Instance 1 → `Key: Action`, `Value: Auto-Stop`
   - Instance 2 → `Key: Action`, `Value: Auto-Start`
+<img width="1898" height="497" alt="ec2_status_before_lambda_invoke" src="https://github.com/user-attachments/assets/8610dbe0-0742-4935-ae1d-6c3d2ac137c7" />
 
 ### 2. IAM Role for Lambda
 - Navigate to **IAM → Roles → Create Role**.
@@ -34,6 +35,7 @@ This project demonstrates how to automate the **starting and stopping of EC2 ins
 - Runtime: **Python 3.x**.
 - Assign the IAM role created above.
 - Add the following code:
+<img width="1895" height="770" alt="image" src="https://github.com/user-attachments/assets/c3f7e119-020d-48cf-b0ac-10259f40cc24" />
 
 ```python
 import boto3
@@ -41,43 +43,70 @@ import boto3
 def lambda_handler(event, context):
     ec2 = boto3.client('ec2')
 
-    # Stop instances tagged Auto-Stop
+    # Find instances tagged Auto-Stop
     stop_response = ec2.describe_instances(
         Filters=[{'Name': 'tag:Action', 'Values': ['Auto-Stop']}]
     )
     stop_ids = [i['InstanceId'] for r in stop_response['Reservations'] for i in r['Instances']]
     
+    # Log current state of Auto-Stop instances
     for i in stop_ids:
         state = ec2.describe_instances(InstanceIds=[i])['Reservations'][0]['Instances'][0]['State']['Name']
-        if state != "stopped":
-            ec2.stop_instances(InstanceIds=[i])
-            print(f"Stopped instance: {i}")
-        else:
-            print(f"Instance {i} is already stopped.")
+        print(f"Instance {i} is currently {state}")
 
-    # Start instances tagged Auto-Start
+    if stop_ids:
+        ec2.stop_instances(InstanceIds=stop_ids)
+        print(f"Stopped instances: {stop_ids}")
+    else:
+        print("No Auto-Stop instances found.")
+
+    # Find instances tagged Auto-Start
     start_response = ec2.describe_instances(
         Filters=[{'Name': 'tag:Action', 'Values': ['Auto-Start']}]
     )
     start_ids = [i['InstanceId'] for r in start_response['Reservations'] for i in r['Instances']]
     
+    # Log current state of Auto-Start instances
     for i in start_ids:
         state = ec2.describe_instances(InstanceIds=[i])['Reservations'][0]['Instances'][0]['State']['Name']
-        if state != "running":
-            ec2.start_instances(InstanceIds=[i])
-            print(f"Started instance: {i}")
-        else:
-            print(f"Instance {i} is already running.")
+        print(f"Instance {i} is currently {state}")
+        
+    if start_ids:
+        ec2.start_instances(InstanceIds=start_ids)
+        print(f"Started instances: {start_ids}")
+    else:
+        print("No Auto-Start instances found.")
 ```
 
 ---
 
 ## 🧪 Testing
 1. Save and **manually invoke** the Lambda function.
+  - Test from the Lambda Console
+  - In the Lambda function page, click Test.
+  - Create a new test event:
+  - Event name: ManualInvoke
+  - Leave the JSON as default (you don’t need to pass anything for this assignment).
+  - Click Save and Test.
+  - Check the Execution results and Logs section:
+  - You’ll see your print() outputs (e.g., current state, started/stopped IDs).
+  - If EC2 actions were triggered, they’ll show here.
 2. Check the **EC2 dashboard**:
    - The `Auto-Stop` instance should transition to **stopped**.
    - The `Auto-Start` instance should transition to **running** (if it was stopped).
-3. Review **CloudWatch Logs** for confirmation of actions taken.
+
+This is ec2 status taken before lambda run.
+<img width="1712" height="396" alt="image" src="https://github.com/user-attachments/assets/c0095d4c-3828-4f26-9cce-29ccc33275ff" />
+
+
+This is test logs on lambda invoke.
+<img width="1900" height="612" alt="image" src="https://github.com/user-attachments/assets/656e5439-3b1e-412e-b52d-34f1cf7917f6" />
+
+
+This ec2 status taken after lambda run.
+<img width="1901" height="392" alt="image" src="https://github.com/user-attachments/assets/c3eb080b-0e48-4d11-843f-f8a734224532" />
+
+3. Optional, you can configure cloudwatch log group and Review **CloudWatch Logs** for confirmation of actions taken.
 
 ---
 
@@ -104,8 +133,6 @@ EC2 Instances (Tagged) ---> Lambda Function ---> Boto3 EC2 Client ---> Start/Sto
 ## ✅ Deliverables
 - Two EC2 instances with tags (`Auto-Stop`, `Auto-Start`).
 - Lambda function with IAM role.
-- Verified automation via manual invocation and CloudWatch logs.
+- Verified automation via manual invocation.
 
 ---
-
-Would you like me to also add a **“Troubleshooting” section** to the README (covering common issues like IAM permission errors, region mismatches, or Lambda timeout)? That would make it even more robust for onboarding new team members.
