@@ -106,7 +106,42 @@ This is test logs on lambda invoke.
 This ec2 status taken after lambda run.
 <img width="1901" height="392" alt="image" src="https://github.com/user-attachments/assets/c3eb080b-0e48-4d11-843f-f8a734224532" />
 
-3. Optional, you can configure cloudwatch log group and Review **CloudWatch Logs** for confirmation of actions taken.
+3. you can configure cloudwatch log group and Review **CloudWatch Logs** for confirmation of actions taken.
+   <img width="1901" height="740" alt="image" src="https://github.com/user-attachments/assets/1ff7a3d2-9c6d-47f0-9441-98c5613a02cb" />
+
+---
+You have two options:
+
+1. **Attach AWS Managed Policy**  
+   - Add **`AWSLambdaBasicExecutionRole`** to your Lambda role.  
+   - This automatically includes the correct CloudWatch Logs permissions.
+
+2. **Add Custom Logs Block**  
+   If you want to extend your JSON, add this statement:
+
+   ```json
+   {
+     "Effect": "Allow",
+     "Action": [
+       "logs:CreateLogGroup",
+       "logs:CreateLogStream",
+       "logs:PutLogEvents"
+     ],
+     "Resource": "arn:aws:logs:*:*:*"
+   }
+   ```
+
+---
+
+### 📌 Next Steps
+1. Edit your Lambda role in IAM.
+2. Attach either `AWSLambdaBasicExecutionRole` or add the custom block above.
+3. Re-run your Lambda.  
+   - CloudWatch will now automatically create the log group `/aws/lambda/<FunctionName>`.  
+   - You’ll see your `print()` outputs in the log stream.
+
+---
+
 
 ---
 
